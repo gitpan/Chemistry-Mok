@@ -1,6 +1,6 @@
 package Chemistry::Mok;
 
-$VERSION = '0.10';
+$VERSION = '0.15';
 use strict;
 use warnings;
 use Chemistry::Mol;
@@ -80,7 +80,7 @@ sub parse {
                 or die "unexpected end of mok program after $$tok\n";
             my $opts = '';
             if ($next->isa("Chemistry::Mok::Opts")) {
-                $opts = $$tok;
+                $opts = $$next;
                 $next = shift @toks
                     or die "unexpected end of mok program after $$tok\n";
             }
@@ -116,6 +116,7 @@ sub compile_blocks {
     my @compiled_blocks;
 
     for my $block (@blocks) {
+        #use Data::Dumper; print Dumper $block;
         my $code = $block->{block};
         my $sub = eval <<END;
             package Chemistry::Mok::UserCode::$pack;
@@ -123,6 +124,9 @@ sub compile_blocks {
             no warnings;
             sub {
                 my (\$mol, \$file, \$match, \$patt) = \@_;
+                my (\$MOL, \$FILE, \$MATCH, \$PATT) = \@_;
+                my (\@A) = \$MATCH ? \$MATCH->atom_map : \$MOL->atoms;
+                my (\@B) = \$MATCH ? \$MATCH->bond_map : \$MOL->bonds;
                 $block->{block};
             }
 END
@@ -213,9 +217,13 @@ __END__
 
 =back
 
+=head1 VERSION
+
+0.15
+
 =head1 SEE ALSO
 
-mok(1)
+L<mok>
 
 =head1 AUTHOR
 
